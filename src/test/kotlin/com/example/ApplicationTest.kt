@@ -146,4 +146,75 @@ class ApplicationTest {
             }
         }
     }
+
+    @ExperimentalSerializationApi
+    @Test
+    fun `access search heroes endpoint, query hero name, assert single hero result`() {
+        withTestApplication(moduleFunction = Application::module) {
+            handleRequest(HttpMethod.Get, "/boruto/heroes/search?name=sas").apply {
+                assertEquals(expected = HttpStatusCode.OK, actual = response.status())
+
+                val actual = Json.decodeFromString<ApiResponse>(response.content.toString())
+                    .heroes.size
+
+                assertEquals(expected = 1, actual = actual)
+            }
+        }
+    }
+
+    @ExperimentalSerializationApi
+    @Test
+    fun `access search heroes endpoint, query hero name, assert multiple heroes result`() {
+        withTestApplication(moduleFunction = Application::module) {
+            handleRequest(HttpMethod.Get, "/boruto/heroes/search?name=sa").apply {
+                assertEquals(expected = HttpStatusCode.OK, actual = response.status())
+
+                val actual = Json.decodeFromString<ApiResponse>(response.content.toString())
+                    .heroes.size
+
+                assertEquals(expected = 3, actual = actual)
+            }
+        }
+    }
+
+    @ExperimentalSerializationApi
+    @Test
+    fun `access search heroes endpoint, query an empty text, assert empty list as a result`() {
+        withTestApplication(moduleFunction = Application::module) {
+            handleRequest(HttpMethod.Get, "/boruto/heroes/search?name=").apply {
+                assertEquals(expected = HttpStatusCode.OK, actual = response.status())
+
+                val actual = Json.decodeFromString<ApiResponse>(response.content.toString())
+                    .heroes
+
+                assertEquals(expected = emptyList(), actual = actual)
+            }
+        }
+    }
+
+    @ExperimentalSerializationApi
+    @Test
+    fun `access search heroes endpoint, query non existing hero, assert empty list as a result`() {
+        withTestApplication(moduleFunction = Application::module) {
+            handleRequest(HttpMethod.Get, "/boruto/heroes/search?name=unknown").apply {
+                assertEquals(expected = HttpStatusCode.OK, actual = response.status())
+
+                val actual = Json.decodeFromString<ApiResponse>(response.content.toString())
+                    .heroes
+
+                assertEquals(expected = emptyList(), actual = actual)
+            }
+        }
+    }
+
+    @ExperimentalSerializationApi
+    @Test
+    fun `access non existing endpoint, assert not found`() {
+        withTestApplication(moduleFunction = Application::module) {
+            handleRequest(HttpMethod.Get, "/unknown").apply {
+                assertEquals(expected = HttpStatusCode.NotFound, actual = response.status())
+                assertEquals(expected = "Page not found.", actual = response.content)
+            }
+        }
+    }
 }
